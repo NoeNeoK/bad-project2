@@ -1,101 +1,177 @@
-import Image from "next/image";
+import React, { useState, useEffect } from "react";
+import { Table, Button, Modal, Form, Input, message, Spin } from "antd";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { useQuery, useMutation } from "@apollo/client";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import {
+  GET_TOP_EMPLOYEES,
+  ADD_EMPLOYEE,
+  UPDATE_EMPLOYEE,
+  DELETE_EMPLOYEE,
+} from "./queries";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+const Page = () => {
+  const [form] = Form.useForm();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  const { loading, error, data } = useQuery(GET_TOP_EMPLOYEES, {
+    fetchPolicy: "cache-first",
+  });
+  const [addEmployee] = useMutation(ADD_EMPLOYEE);
+  const [updateEmployee] = useMutation(UPDATE_EMPLOYEE);
+  const [deleteEmployee] = useMutation(DELETE_EMPLOYEE);
+
+  useEffect(() => {
+    if (error) {
+      message.error("Error fetching employees");
+    }
+  }, [error]);
+
+  const columns = [
+    {
+      title: "Employee No",
+      dataIndex: "emp_no",
+      key: "emp_no",
+    },
+    {
+      title: "First Name",
+      dataIndex: "first_name",
+      key: "first_name",
+    },
+    {
+      title: "Last Name",
+      dataIndex: "last_name",
+      key: "last_name",
+    },
+    {
+      title: "Department",
+      dataIndex: "dept_name",
+      key: "dept_name",
+    },
+    {
+      title: "Salary",
+      dataIndex: "max_salary",
+      key: "max_salary",
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (text, record) => (
+        <div>
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setSelectedEmployee(record);
+              setIsUpdate(true);
+              setIsModalVisible(true);
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Edit
+          </Button>
+          <Button
+            type="danger"
+            icon={<DeleteOutlined />}
+            onClick={() => {
+              deleteEmployee({ variables: { id: record.id } });
+            }}
           >
-            Read our docs
-          </a>
+            Delete
+          </Button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ),
+    },
+  ];
+
+  const handleAddEmployee = async (values) => {
+    try {
+      await addEmployee({ variables: { input: values } });
+      setIsModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      message.error("Error adding employee");
+    }
+  };
+
+  const handleUpdateEmployee = async (values) => {
+    try {
+      await updateEmployee({
+        variables: { id: selectedEmployee.id, input: values },
+      });
+      setIsModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      message.error("Error updating employee");
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    form.resetFields();
+    setIsUpdate(false);
+    setSelectedEmployee(null);
+  };
+
+  return (
+    <div>
+      <Button
+        type="primary"
+        icon={<PlusOutlined />}
+        onClick={() => {
+          setIsModalVisible(true);
+        }}
+      >
+        Add Employee
+      </Button>
+      {loading ? (
+        <Spin />
+      ) : (
+        <Table
+          columns={columns}
+          dataSource={data ? data.employees : []}
+          rowKey="id"
+        />
+      )}
+      <Modal
+        title={isUpdate ? "Update Employee" : "Add Employee"}
+        visible={isModalVisible}
+        onCancel={handleCancel}
+        onOk={() => {
+          form
+            .validateFields()
+            .then((values) => {
+              if (isUpdate) {
+                handleUpdateEmployee(values);
+              } else {
+                handleAddEmployee(values);
+              }
+            })
+            .catch((info) => {
+              console.log("Validate Failed:", info);
+            });
+        }}
+      >
+        <Form form={form} layout="vertical" name="employeeForm">
+          <Form.Item
+            name="name"
+            label="Name"
+            rules={[{ required: true, message: "Please input the name!" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="position"
+            label="Position"
+            rules={[{ required: true, message: "Please input the position!" }]}
+          >
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
-}
+};
+
+export default Page;
