@@ -1,33 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { Table, Button, Modal, Form, Input, message, Spin } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useQuery, useMutation } from "@apollo/client";
+"use client";
 
-import {
-  GET_TOP_EMPLOYEES,
-  ADD_EMPLOYEE,
-  UPDATE_EMPLOYEE,
-  DELETE_EMPLOYEE,
-} from "./queries";
+import React, { useState } from "react";
+import { Table, Button, Modal, Form, Input, Spin } from "antd";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+
+const mockData = [
+  {
+    emp_no: "10001",
+    first_name: "John",
+    last_name: "Doe",
+    dept_name: "Engineering",
+    max_salary: 85000,
+  },
+  {
+    emp_no: "10002",
+    first_name: "Jane",
+    last_name: "Smith",
+    dept_name: "Marketing",
+    max_salary: 75000,
+  },
+  // Add more mock data as needed
+];
 
 const Page = () => {
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-
-  const { loading, error, data } = useQuery(GET_TOP_EMPLOYEES, {
-    fetchPolicy: "cache-first",
-  });
-  const [addEmployee] = useMutation(ADD_EMPLOYEE);
-  const [updateEmployee] = useMutation(UPDATE_EMPLOYEE);
-  const [deleteEmployee] = useMutation(DELETE_EMPLOYEE);
-
-  useEffect(() => {
-    if (error) {
-      message.error("Error fetching employees");
-    }
-  }, [error]);
+  const [employees, setEmployees] = useState(mockData);
+  const [loading, setLoading] = useState(false);
 
   const columns = [
     {
@@ -58,8 +59,8 @@ const Page = () => {
     {
       title: "Actions",
       key: "actions",
-      render: (text, record) => (
-        <div>
+      render: (_, record) => (
+        <div style={{ display: "flex", gap: "8px" }}>
           <Button
             type="primary"
             icon={<EditOutlined />}
@@ -72,11 +73,9 @@ const Page = () => {
             Edit
           </Button>
           <Button
-            type="danger"
+            danger
             icon={<DeleteOutlined />}
-            onClick={() => {
-              deleteEmployee({ variables: { id: record.id } });
-            }}
+            onClick={() => handleDelete(record.emp_no)}
           >
             Delete
           </Button>
@@ -85,88 +84,94 @@ const Page = () => {
     },
   ];
 
-  const handleAddEmployee = async (values) => {
-    try {
-      await addEmployee({ variables: { input: values } });
-      setIsModalVisible(false);
-      form.resetFields();
-    } catch (error) {
-      message.error("Error adding employee");
-    }
+  const handleDelete = (empNo) => {
+    setEmployees(employees.filter((emp) => emp.emp_no !== empNo));
   };
 
-  const handleUpdateEmployee = async (values) => {
-    try {
-      await updateEmployee({
-        variables: { id: selectedEmployee.id, input: values },
-      });
-      setIsModalVisible(false);
-      form.resetFields();
-    } catch (error) {
-      message.error("Error updating employee");
-    }
-  };
-
-  const handleCancel = () => {
+  const handleAdd = (values) => {
+    const newEmployee = {
+      emp_no: String(Date.now()),
+      first_name: values.first_name,
+      last_name: values.last_name,
+      dept_name: values.department,
+      max_salary: parseFloat(values.salary),
+    };
+    setEmployees([...employees, newEmployee]);
     setIsModalVisible(false);
     form.resetFields();
-    setIsUpdate(false);
+  };
+
+  const handleUpdate = (values) => {
+    setEmployees(
+      employees.map((emp) =>
+        emp.emp_no === selectedEmployee.emp_no ? { ...emp, ...values } : emp
+      )
+    );
+    setIsModalVisible(false);
     setSelectedEmployee(null);
+    form.resetFields();
   };
 
   return (
-    <div>
+    <div style={{ padding: "20px" }}>
       <Button
         type="primary"
         icon={<PlusOutlined />}
         onClick={() => {
+          setIsUpdate(false);
           setIsModalVisible(true);
         }}
+        style={{ marginBottom: "16px" }}
       >
         Add Employee
       </Button>
-      {loading ? (
-        <Spin />
-      ) : (
-        <Table
-          columns={columns}
-          dataSource={data ? data.employees : []}
-          rowKey="id"
-        />
-      )}
+
+      <Table
+        columns={columns}
+        dataSource={employees}
+        rowKey="emp_no"
+        loading={loading}
+      />
+
       <Modal
         title={isUpdate ? "Update Employee" : "Add Employee"}
-        visible={isModalVisible}
-        onCancel={handleCancel}
-        onOk={() => {
-          form
-            .validateFields()
-            .then((values) => {
-              if (isUpdate) {
-                handleUpdateEmployee(values);
-              } else {
-                handleAddEmployee(values);
-              }
-            })
-            .catch((info) => {
-              console.log("Validate Failed:", info);
-            });
+        open={isModalVisible}
+        onOk={() => form.submit()}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setSelectedEmployee(null);
+          form.resetFields();
         }}
       >
-        <Form form={form} layout="vertical" name="employeeForm">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={isUpdate ? handleUpdate : handleAdd}
+          initialValues={selectedEmployee}
+        >
           <Form.Item
-            name="name"
-            label="Name"
-            rules={[{ required: true, message: "Please input the name!" }]}
+            name="first_name"
+            label="First Name"
+            rules={[{ required: true }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            name="position"
-            label="Position"
-            rules={[{ required: true, message: "Please input the position!" }]}
+            name="last_name"
+            label="Last Name"
+            rules={[{ required: true }]}
           >
             <Input />
+          </Form.Item>
+          <Form.Item
+            name="department"
+            label="Department"
+            rules={[{ required: true }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item name="salary" label="Salary" rules={[{ required: true }]}>
+            <Input type="number" />
           </Form.Item>
         </Form>
       </Modal>
