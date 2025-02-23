@@ -1,16 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { Table, Button, Modal, Form, Input, Spin } from "antd";
+import { Table, Button, Modal, Form, Input, DatePicker, Select } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const mockData = [
   {
-    emp_no: "10001",
-    first_name: "John",
-    last_name: "Doe",
-    dept_name: "Engineering",
-    max_salary: 85000,
+    emp_no: 10001,
+    birth_date: "1953-09-02",
+    first_name: "Georgi",
+    last_name: "Facello",
+    gender: "M",
+    hire_date: "1986-06-26",
+    department: "Development", // This will come from dept_emp and departments tables join
+    title: "Senior Engineer", // This will come from titles table
+    salary: 85000, // This will come from salaries table (current salary)
   },
   {
     emp_no: "10002",
@@ -32,29 +36,44 @@ const Page = () => {
 
   const columns = [
     {
-      title: "Employee No",
+      title: "Emp. No",
       dataIndex: "emp_no",
       key: "emp_no",
     },
     {
-      title: "First Name",
-      dataIndex: "first_name",
-      key: "first_name",
+      title: "Full Name",
+      key: "fullName",
+      render: (_, record) => `${record.first_name} ${record.last_name}`,
     },
     {
-      title: "Last Name",
-      dataIndex: "last_name",
-      key: "last_name",
+      title: "Gender",
+      dataIndex: "gender",
+      key: "gender",
+    },
+    {
+      title: "Birth Date",
+      dataIndex: "birth_date",
+      key: "birth_date",
+    },
+    {
+      title: "Hire Date",
+      dataIndex: "hire_date",
+      key: "hire_date",
     },
     {
       title: "Department",
-      dataIndex: "dept_name",
-      key: "dept_name",
+      dataIndex: "department",
+      key: "department",
     },
     {
-      title: "Salary",
-      dataIndex: "max_salary",
-      key: "max_salary",
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+    },
+    {
+      title: "Current Salary",
+      dataIndex: "salary",
+      key: "salary",
     },
     {
       title: "Actions",
@@ -90,11 +109,15 @@ const Page = () => {
 
   const handleAdd = (values) => {
     const newEmployee = {
-      emp_no: String(Date.now()),
+      emp_no: Date.now(),
+      birth_date: values.birth_date.format("YYYY-MM-DD"),
       first_name: values.first_name,
       last_name: values.last_name,
-      dept_name: values.department,
-      max_salary: parseFloat(values.salary),
+      gender: values.gender,
+      hire_date: values.hire_date.format("YYYY-MM-DD"),
+      department: values.department,
+      title: values.title,
+      salary: parseFloat(values.salary),
     };
     setEmployees([...employees, newEmployee]);
     setIsModalVisible(false);
@@ -163,11 +186,34 @@ const Page = () => {
           >
             <Input />
           </Form.Item>
+          <Form.Item name="gender" label="Gender" rules={[{ required: true }]}>
+            <Select>
+              <Select.Option value="M">Male</Select.Option>
+              <Select.Option value="F">Female</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="birth_date"
+            label="Birth Date"
+            rules={[{ required: true }]}
+          >
+            <DatePicker />
+          </Form.Item>
+          <Form.Item
+            name="hire_date"
+            label="Hire Date"
+            rules={[{ required: true }]}
+          >
+            <DatePicker />
+          </Form.Item>
           <Form.Item
             name="department"
             label="Department"
             rules={[{ required: true }]}
           >
+            <Input />
+          </Form.Item>
+          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item name="salary" label="Salary" rules={[{ required: true }]}>
