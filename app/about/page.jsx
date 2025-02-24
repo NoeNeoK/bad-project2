@@ -1,4 +1,6 @@
 import React from "react";
+import Link from "next/link";
+import styles from "./about.module.css";
 
 const AboutPage = () => {
   const teamMembers = [
@@ -17,30 +19,19 @@ const AboutPage = () => {
   ];
 
   return (
-    <div
-      style={{
-        fontFamily: "Arial, sans-serif",
-        maxWidth: "800px",
-        margin: "0 auto",
-        padding: "20px",
-      }}
-    >
-      <h1>Our Team</h1>
-      {teamMembers.map((member, index) => (
-        <div
-          key={index}
-          style={{
-            marginBottom: "20px",
-            padding: "10px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-          }}
-        >
-          <h2>{member.name}</h2>
-          <p>{member.role}</p>
-        </div>
-      ))}
-      <a href="/">Back to Home</a>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Our Team</h1>
+      <div className={styles.teamGrid}>
+        {teamMembers.map((member, index) => (
+          <div key={index} className={styles.memberCard}>
+            <h2 className={styles.memberName}>{member.name}</h2>
+            <p className={styles.memberRole}>{member.role}</p>
+          </div>
+        ))}
+      </div>
+      <Link href="/" className={styles.link}>
+        ← Back to Dashboard
+      </Link>
     </div>
   );
 };
