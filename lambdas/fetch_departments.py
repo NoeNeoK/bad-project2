@@ -1,4 +1,4 @@
-from db_config import DB, Cache, get_cors_headers
+from db_config import DB, Cache
 import json
 
 def lambda_handler(event, context):
@@ -10,7 +10,6 @@ def lambda_handler(event, context):
         if cached:
             return {
                 'statusCode': 200,
-                'headers': get_cors_headers(),
                 'body': cached
             }
 
@@ -32,14 +31,12 @@ def lambda_handler(event, context):
             
             return {
                 'statusCode': 200,
-                'headers': {**get_cors_headers(), 'Content-Type': 'application/json'},
                 'body': response_data
             }
             
     except Exception as e:
         return {
             'statusCode': 500,
-            'headers': {**get_cors_headers(), 'Content-Type': 'application/json'},
             'body': json.dumps({'error': str(e)})
         }
     finally:

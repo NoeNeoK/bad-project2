@@ -17,56 +17,34 @@ const fetchAPI = async (url, options = {}) => {
 export const fetchTopEmployees = () => fetchAPI(`${BASE_URL}/employees/top-employee`);
 
 export const createEmployee = async (employeeData) => {
-  const formattedData = {
-    httpMethod: "POST",
-    body: JSON.stringify(employeeData),
-  };
-
+  // Send data directly without the extra wrapping
   return fetchAPI(`${BASE_URL}/employees`, {
     method: "POST",
-    body: JSON.stringify(formattedData),
+    body: JSON.stringify(employeeData)
   });
 };
 
 export const fetchDepartments = () => fetchAPI(`${BASE_URL}/departments`);
 
 export const updateEmployee = async (empNo, employeeData) => {
-  const formattedData = {
-    httpMethod: "PUT",
-    pathParameters: {
-      emp_no: empNo,
-    },
-    body: JSON.stringify(employeeData), // Now only contains modified fields
-  };
-
+  // Send data directly without the extra wrapping
   return fetchAPI(`${BASE_URL}/employees/${empNo}`, {
     method: "PUT",
-    body: JSON.stringify(formattedData),
+    body: JSON.stringify(employeeData)
   });
 };
 
 export const deleteEmployee = async (empNo) => {
-  const formattedData = {
-    httpMethod: "DELETE",
-    pathParameters: {
-      emp_no: empNo,
-    },
-  };
-
+  // No need for body in DELETE request
   return fetchAPI(`${BASE_URL}/employees/${empNo}`, {
-    method: "DELETE",
-    body: JSON.stringify(formattedData),
+    method: "DELETE"
   });
 };
 
 export const batchUpdateEmployees = async (updates) => {
-  const formattedData = {
-    httpMethod: "PUT",
-    body: JSON.stringify({ updates }),
-  };
-
+  // Send updates directly
   return fetchAPI(`${BASE_URL}/employees/batch`, {
     method: "PUT",
-    body: JSON.stringify(formattedData),
+    body: JSON.stringify({ updates })
   });
 };

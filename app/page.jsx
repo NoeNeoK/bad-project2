@@ -34,20 +34,19 @@ const Page = () => {
     return d.toLocaleDateString('en-CA');
   };
 
-  const formatSalary = (salary) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(salary);
-  };
-
   useEffect(() => {
     const loadEmployees = async () => {
       try {
         const data = await fetchTopEmployees();
         const deptData = await fetchDepartments();
         setDepartments(JSON.parse(deptData.body));
-        setEmployees(JSON.parse(data.body));
+        const employeesData = JSON.parse(data.body).map(emp => ({
+          ...emp,
+          max_salary: emp.salary ? Number(emp.salary) : 0, 
+        }));
+        console.log(employeesData, "employeesData");
+        console.log(data, "Fetched data")
+        setEmployees(employeesData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -204,7 +203,7 @@ const Page = () => {
               <td>#{emp.emp_no}</td>
               <td>{`${emp.first_name} ${emp.last_name}`}</td>
               <td>{emp.dept_name}</td>
-              <td>{formatSalary(emp.max_salary)}</td>
+              <td>${emp.max_salary}</td>
               <td>
                 <button className={styles.editButton} onClick={() => handleEdit(emp)}>
                   Edit
